@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+
+    </style>
+</head>
+<body>
+
+<div id="app">
+
+    <!--Tabs 标签页    -->
+    <template>
+        <el-tabs v-model="activeName" @tab-click="handleClick">
+
+            <el-tab-pane label="登陆" name="first" >
+                <!--Dialog 对话框    -->
+                <el-dialog
+                        title="登陆页面"
+                        :visible.sync="dialogVisible2"
+                        width="30%"
+                        :before-close="handleClose">
+                    <!--典型表单    -->
+                    <el-form ref="form" :model="members" label-width="80px" size="mini">
+                        <el-form-item label="用户名">
+                            <el-input v-model="members.username" ></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="密码">
+                            <el-input v-model="members.password"></el-input>
+                        </el-form-item>
+
+                        <el-form-item>
+                            <el-button type="primary" @click="login">登陆</el-button>
+                            <el-button @click="resetForm()">重置</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-dialog>
+            </el-tab-pane>
+
+            <el-tab-pane label="注册" name="second" >
+                <!--Dialog 对话框    -->
+                <el-dialog
+                        title="注册页面"
+                        :visible.sync="dialogVisible"
+                        width="30%"
+                        :before-close="handleClose">
+                    <!--典型表单    -->
+                    <el-form ref="form" :model="members" label-width="80px" size="mini">
+                        <el-form-item label="用户名">
+                            <el-input v-model="members.username" @blur="userNameVerification()"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="密码">
+                            <el-input v-model="members.password"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="再次输入密码">
+                            <el-input v-model="password2"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="真名">
+                            <el-input v-model="members.name"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="专业班级">
+                            <el-input v-model="members.profession"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="性别">
+                            <el-radio-group v-model="members.sex">
+                                <el-radio label="女" value="女"></el-radio>
+                                <el-radio label="男" value="男"></el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <el-form-item label="个性签名">
+                            <el-input type="textarea" v-model="members.introduction"></el-input>
+                        </el-form-item>
+
+                        <el-form-item>
+                            <el-button type="primary" @click="onSubmit">注册</el-button>
+                            <el-button @click="resetForm()">重置</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-dialog>
+            </el-tab-pane>
+
+        </el-tabs>
+    </template>
+
+
+
+
+</div>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+
+<script src="js/axios.js"></script>
+<script>
+    new Vue({
+        //vue的作用域
+        el:"#app",
+        //当页面加载后发生
+        mounted(){
+        },
+        //vue的数据
+        data(){
+            return {
+                activeName: 'first',
+                //对话框
+                dialogVisible: false,
+                dialogVisible2: true,
+                //典型表单
+                members: {
+                    id: '',
+                    username: '',
+                    password: '',
+                    name: '',
+                    sex: '',
+                    profession: '',
+                    introduction: ''
+                },
+                password2:'',
+            }
+        },
+        //vue的方法
+        methods:{
+            handleClick(tab, event) {
+                if(this.dialogVisible==true){
+                    this.dialogVisible=false;
+                    this.dialogVisible2=true;
+                }else{
+                    this.dialogVisible2=false;
+                    this.dialogVisible=true;
+                }
+            },
+            //用户名校验
+            userNameVerification(){
+                var _this =this;
+                axios({//////////////////////////////////////////在axios中，vue中的属性要用 _this
+                    method:"post",
+                    url: "http://localhost:8080/GDPU_IT4_war/members/userNameVerification",
+                    data: _this.members.username
+                }).then(function (resp) {
+                    if(resp.data!=null){
+                        _this.$message.error(resp.data);
+                    }
+                })
+            },
+            //典型表单
+            //登陆
+            login(){
+                var _this =this;
+                axios({//////////////////////////////////////////在axios中，vue中的属性要用 _this
+                    method:"post",
+                    url: "http://localhost:8080/GDPU_IT4_war/members/login",
+                    data: _this.members
+                }).then(function (resp) {
+                    if("success"==resp.data){
+                        _this.$message({////////////////  _this
+                            message: '恭喜你，登陆成功',
+                            type: 'success'
+                        });
+                    }else {
+                        _this.$message.error('错了哦，看看哪里有问题');
+                    }
+                    _this.resetForm();
+                })
+            },
+            onSubmit() {
+                // console.log(this.messages);
+                var _this =this;
+                axios({//////////////////////////////////////////在axios中，vue中的属性要用 _this
+                    method:"post",
+                    url: "http://localhost:8080/GDPU_IT4_war/members/add",
+                    data: _this.members
+                }).then(function (resp) {
+                    if("success"==resp.data){
+                        //消息弹窗！
+                        _this.$message({////////////////  _this
+                            message: '恭喜你，注册成功',
+                            type: 'success'
+                        });
+                        _this.resetForm();
+                    }else{
+                        _this.$message.error('错了哦，看看哪里有问题');
+                    }
+
+                })
+            },
+            resetForm() {
+                this.members={
+                    id: '',
+                    username: '',
+                    password: '',
+                    name: '',
+                    sex: '',
+                    profession: '',
+                    introduction: ''
+                };
+                this.password2='';
+            }
+        }
+    })
+</script>
+</body>
+</html>

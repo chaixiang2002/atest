@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <template>
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+      <el-tab-pane label="活动申请表" name="first">
+        配置管理
+      </el-tab-pane>
+      <el-tab-pane label="物资申请表" name="second">
+
+          <el-form ref="form" :model="materials" label-width="80px">
+            <el-form-item label="申请物资填写">
+              <el-input type="textarea" v-model="materials.materialsList"></el-input>
+            </el-form-item>
+            <el-form-item label="申请人姓名（校验）">
+              <el-input  v-model="materials.borrower" @blur="isExist"></el-input>
+            </el-form-item>
+            <el-form-item label="申请借用时长">
+              <el-input  v-model="materials.time"></el-input>
+            </el-form-item>
+            <el-form-item label="申请物资使用目的">
+              <el-input type="textarea" v-model="materials.borrowingPurposes"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="materialsSubmit">提交</el-button>
+              <el-button @click="materialsReset">重置</el-button>
+            </el-form-item>
+
+          </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="场地申请表" name="third">
+        角色管理
+        <el-form ref="form" :model="Site" label-width="80px">
+          <el-form-item label="申请场地填写">
+            <el-input type="textarea" v-model="Site.ApplicantSite"></el-input>
+          </el-form-item>
+          <el-form-item label="申请人姓名（校验）">
+            <el-input  v-model="Site.Borrower" @blur="memberIsExist(Site.Borrower)"></el-input>
+          </el-form-item>
+          <el-form-item label="申请借用时长">
+            <el-input  v-model="Site.time"></el-input>
+          </el-form-item>
+          <el-form-item label="场地使用用途">
+            <el-input type="textarea" v-model="Site.ApplicationPurposes"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="siteSubmit">提交</el-button>
+            <el-button @click="siteReset">重置</el-button>
+          </el-form-item>
+
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="经费使用详情填写" name="fourth">
+        定时任务补偿
+      </el-tab-pane>
+    </el-tabs>
+  </template>
+
+
+<!--  <el-form ref="form" :model="activity" label-width="80px">-->
+<!--    <el-form-item label="活动名称">-->
+<!--      <el-input v-model="activity."></el-input>-->
+<!--    </el-form-item>-->
+
+<!--    <el-form-item label="申请组织名">-->
+<!--      <el-select v-model="activity." placeholder="请选择组织">-->
+<!--        <el-option label="计算机协会" value="计算机协会"></el-option>-->
+<!--        <el-option label="其他" value="其他"></el-option>-->
+<!--      </el-select>-->
+<!--    </el-form-item>-->
+
+<!--    <el-form-item label="物资申请表单编号">-->
+<!--      <el-input v-model="activity."></el-input>-->
+<!--    </el-form-item>-->
+<!--    <el-form-item label="场地申请表单编号">-->
+<!--      <el-input v-model="activity."></el-input>-->
+<!--    </el-form-item>-->
+<!--    <el-form-item label="经费使用表单编号">-->
+<!--      <el-input v-model="activity."></el-input>-->
+<!--    </el-form-item>-->
+<!--    <el-form-item label="调用人员组编号">-->
+<!--      <el-input v-model="activity."></el-input>-->
+<!--    </el-form-item>-->
+
+<!--    <el-form-item label="活动内容概要">-->
+<!--      <el-input type="textarea" v-model="activity."></el-input>-->
+<!--    </el-form-item>-->
+<!--    <el-form-item>-->
+<!--      <el-button type="primary" @click="onSubmit">提交申请</el-button>-->
+<!--      <el-button>取消</el-button>-->
+<!--    </el-form-item>-->
+<!--  </el-form>-->
+
+
+</div>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+
+<script src="js/axios.js"></script>
+<script>
+  new Vue({
+    //vue的作用域
+    el:"#app",
+    //当页面加载后发生
+    mounted(){
+
+    },
+    //vue的数据
+    data(){
+      return{
+        //当前标签页
+        activeName: 'second',
+
+        //活动表
+        activity:{
+          id:'',
+          name:'',
+          organizationName:'',
+          time:'',
+          materialsID:'',
+          siteID:'',
+          expenditureID:'',
+          groupID:'',
+          Content:''
+        },
+
+        //物资表
+        materials:{
+          id:'',
+          materialsList:'',
+          borrower:'',
+          time:'',
+          borrowingPurposes:''
+        },
+
+        //场地表
+        Site:{
+          ID:'',
+          ApplicantSite:'',
+          Borrower:'',
+          time:'',
+          ApplicationPurposes:''
+        }
+      }
+    },
+    //vue的方法
+    methods:{
+      //点击标签页
+      handleClick(tab, event) {
+        this.$message({////////////////  _this
+          message: '当前是'+this.activeName+'页面',
+          type: 'success'
+        });
+      },
+
+      //校验申请人是否存在
+      isExist(){
+        var _this =this;
+        axios({
+          method:"post",
+          url: "http://localhost:8080/GDPU_IT4_war/members/userNameVerification",
+          data: _this.materials.borrower
+        }).then(function (resp) {
+          if("该用户不存在！"==resp.data){
+            _this.$message.error(resp.data);
+          }else {
+            _this.materials.borrower=resp.data;
+            _this.$message({////////////////  _this
+              message: '已识别此用户,自动填入成员ID'+resp.data,
+              type: 'success'
+            });
+          }
+        })
+      },
+
+      //提交物资表
+      materialsSubmit(){
+        var _this =this;
+        axios({//////////////////////////////////////////在axios中，vue中的属性要用 _this
+          method:"post",
+          url: "http://localhost:8080/GDPU_IT4_war/materials/add",
+          data: _this.materials
+        }).then(function (resp) {
+          if("success"==resp.data){//成功
+            //消息弹窗！
+            _this.$message({////////////////  _this
+              message: '物资申请表提交成功',
+              type: 'success'
+            });
+          }else{//失败
+            _this.$message.error('物资申请表提交失败');
+          }
+        })
+      },
+      materialsReset(){
+        this.materials.materialsList='';
+        this.materials.time='';
+        this.materials.borrower='';
+        this.materials.borrowingPurposes='';
+      },
+
+      //提交场地表
+      siteSubmit(){
+        var _this =this;
+        axios({//////////////////////////////////////////在axios中，vue中的属性要用 _this
+          method:"post",
+          url: "http://localhost:8080/GDPU_IT4_war/site/add",
+          data: _this.Site
+        }).then(function (resp) {
+          if("success"==resp.data){//成功
+            //消息弹窗！
+            _this.$message({////////////////  _this
+              message: '场地申请表提交成功',
+              type: 'success'
+            });
+          }else{//失败
+            _this.$message.error('场地申请表提交失败');
+          }
+        })
+      },
+      siteReset(){
+        this.Site.ID=''
+        this.Site.ApplicantSite=''
+        this.Site.Borrower=''
+        this.Site.time=''
+        this.Site.ApplicationPurposes=''
+      },
+      //校验申请人是否存在222222222222222222222222222
+      memberIsExist(data_){
+        var _this =this;
+        axios({
+          method:"post",
+          url: "http://localhost:8080/GDPU_IT4_war/members/userNameIsExist",
+          data: data_
+        }).then(function (resp) {
+          if("该用户不存在！"==resp.data){
+            _this.$message.error(resp.data);
+          }else {
+            _this.materials.borrower=resp.data;
+            _this.$message({////////////////  _this
+              message: resp.data,
+              type: 'success'
+            });
+          }
+        })
+      },
+
+
+    }
+  })
+</script>
+</body>
+</html>

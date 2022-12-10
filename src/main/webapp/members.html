@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        <!-- 带状态表格 -->
+        .el-table .warning-row {
+            background: oldlace;
+        }
+
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+
+
+
+    </style>
+</head>
+<body>
+<div id="app">
+
+
+    <!-- 行内表单  -->
+    <el-form :inline="true" :model="messages" class="demo-form-inline">
+
+        <el-form-item label="时间">
+            <el-select v-model="messages.time" placeholder="活动区域">
+                <el-option label="近1周" value="aWeek"></el-option>
+                <el-option label="近1个月" value="aMoon"></el-option>
+                <el-option label="近1年" value="aYear"></el-option>
+            </el-select>
+        </el-form-item>
+
+        <el-form-item label="发送者">
+            <el-input v-model="messages.sender" placeholder="发送人"></el-input>
+        </el-form-item>
+
+        <el-form-item label="接收者">
+            <el-input v-model="messages.receiver" placeholder="发送人"></el-input>
+        </el-form-item>
+
+        <el-form-item label="内容">
+            <el-input v-model="messages.content_" placeholder="内容"></el-input>
+        </el-form-item>
+
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+
+    <!-- Dialog 对话框-->
+    <el-row>
+        <el-button type="primary" plain>批量删除</el-button>
+        <el-button type="danger" plain @click="dialogVisible = true">新增信息</el-button>
+    </el-row>
+    <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :before-close="handleClose">
+
+        <!-- ¶Form 表单 -->
+        <el-form ref="form" :model="messages" label-width="80px">
+            <el-form-item label="发送者">
+                <el-input v-model="messages.sender"></el-input>
+            </el-form-item>
+
+            <el-form-item label="接收者">
+                <el-input v-model="messages.receiver"></el-input>
+            </el-form-item>
+
+            <el-form-item label="内容">
+                <el-input type="textarea" v-model="messages.content_"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+                <el-button type="primary" @click="addMessages">添加</el-button>
+                <el-button @click="dialogVisible = false">取消</el-button>
+                <!-- cx -->
+            </el-form-item>
+        </el-form>
+
+
+    </el-dialog>
+
+
+    <!-- 带状态表格 -->
+    <template>
+        <el-table
+                :data="tableData"
+                style="width: 100%"
+                :row-class-name="tableRowClassName"
+                @selection-change="handleSelectionChange"
+            >
+            <el-table-column
+                    type="selection"
+                    width="55">
+            </el-table-column>
+            <el-table-column
+                    type="index"
+                    width="50">
+            </el-table-column>
+
+            <el-table-column
+                    prop="id"
+                    label="编号ID"
+                    align="center"
+
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="sender"
+                    label="发送者"
+                    align="center"
+
+                    width="180">
+            </el-table-column>
+            <el-table-column
+                    prop="receiver"
+                    label="接收者"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="content_"
+                    label="内容"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="time"
+                    label="发送时间"
+                    align="center">
+            </el-table-column>
+
+            <el-table-column
+                    align="center"
+                    label="操作">
+                <el-row>
+                    <el-button type="warning" plain>修改</el-button>
+                    <el-button type="danger" plain>删除</el-button>
+                </el-row>
+
+            </el-table-column>
+        </el-table>
+    </template>
+
+    <!--  分页  -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[4, 8, 12, 16]"
+            :page-size="4"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="400">
+    </el-pagination>
+</div>
+
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+
+<script src="js/axios.js"></script>
+
+<script>
+    new Vue({
+        //vue的作用域
+        el:"#app",
+        //当页面加载后发生
+        mounted(){
+            this.selectAll();
+        },
+        methods: {
+            //查询所有
+            selectAll(){
+                var _this = this;
+
+                axios({
+                    method:"get",
+                    url:"http://localhost:8080/GDPU_IT4_war/messages/selectAll"
+                }).then(function (resp){
+                    console.log(resp.data);
+                    _this.tableData=resp.data;//没有data()
+
+                })
+            },
+
+            // ¶行内表单
+            onSubmit() {
+                console.log(this.messages);
+            },
+            // Dialog 对话框
+            handleClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        done();
+                    })
+                    .catch(_ => {});
+            },
+            //Form 表单
+            addMessages(){
+                // console.log(this.messages);
+                var _this =this;
+                axios({//////////////////////////////////////////在axios中，vue中的属性要用 _this
+                    method:"post",
+                    url: "http://localhost:8080/GDPU_IT4_war/messages/add",
+                    data: _this.messages
+                }).then(function (resp) {
+                    if("success add messages"==resp.data){
+                        //
+
+                        //
+                        _this.dialogVisible=false;
+                        _this.selectAll();
+                        //消息弹窗！
+                        _this.$message({////////////////  _this
+                            message: '恭喜你，添加成功',
+                            type: 'success'
+                        });
+                    }
+                })
+            },
+            // 多选
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+                console.log(this.multipleSelection)
+            },
+
+            // 带状态表格
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            //分页
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                console.log(`当前页: ${val}`);
+            },
+        },
+        data() {
+            return {
+                //¶行内表单    //Form 表单
+                messages: {
+                    id:'',
+                    sender:'',
+                    receiver:'',
+                    content_:'',
+                    time:''
+                },
+                // Dialog 对话框
+                dialogVisible: false,
+
+                // 多选
+                multipleSelection: [],
+
+                //有状态表格
+                tableData: [],//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //分页
+                currentPage: 4
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>
